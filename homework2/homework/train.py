@@ -46,7 +46,7 @@ def train(
     # create loss function and optimizer
     loss_func = ClassificationLoss()
     
-    optim = torch.optim.SGD(model.parameters(), lr = 0.01, momentum = 0.9)
+    optim = torch.optim.SGD(model.parameters(), lr = lr, momentum = 0.9)
 
     global_step = 0
     metrics = {"train_acc": [], "val_acc": []}
@@ -71,7 +71,8 @@ def train(
             optim.step()
 
             # log
-            metrics['train_acc'].append((pred[:, 0] > 0).int() == label)
+            batch_acc = (pred.argmax(dim = 1) == label).float().mean().item()
+            metrics['train_acc'].append(batch_acc)
 
             global_step += 1
 
@@ -83,8 +84,8 @@ def train(
                 img, label = img.to(device), label.to(device)
                 pred = model(img)
 
-                # TODO: compute validation accuracy
-                metrics['val_acc'].append((pred[:, 0] > 0).int() == label)
+                batch_acc = (pred.argmax(dim = 1) == label).float().mean().item()
+                metrics['val_acc'].append(batch_acc)
 
         # log average train and val accuracy to tensorboard
         epoch_train_acc = torch.as_tensor(metrics["train_acc"]).mean()
